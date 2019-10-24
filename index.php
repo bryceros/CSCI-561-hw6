@@ -19,7 +19,7 @@
         margin: 0 auto;
     }
     .title{
-        font-style: serif;
+        font-style: italic;
         text-align:center;
         font-size: 2.3em;
         margin: 0 auto;
@@ -119,7 +119,7 @@
         margin: 0 auto;         
         table-layout: fixed;
         text-align:center;
-        border: 1px solid black;
+        border: 1px solid blue;
         background-color: RGB(79,182,240);
         color: white;
 
@@ -132,7 +132,8 @@
     .cell {
         display: table-cell;         
         text-align:center;
-        border: 1px solid black;
+        border: 1px solid blue;
+        padding: 5px 5px;
     }
     .summary_card{
         width: 405px;
@@ -185,8 +186,8 @@
         font-size: 0.6em;
     }
     .graph_button{
-        width: 20px;
-        height: 20px;
+        width: 50px;
+        height: 50px;
         margin: -1em auto;
         background-size: contain;
         background-repeat: none;
@@ -216,6 +217,16 @@
         height:65%;
         border-right: white 4px solid;
     }
+
+/* Inline #1 | http://localhost:8000/ */
+
+.input_box ul li {
+  padding: 2px;
+}
+
+/* Inline #0 | http://localhost:8000/ */
+
+
 </style>
 </head>
 <body>
@@ -443,30 +454,36 @@
             $address = $coordinates['lat'].', '.$coordinates['lng'];
             $api_key = "89b9849303b7b90094b011d8ebd2489d";
             $url = "https://api.darksky.net/forecast/".$api_key."/".$address."?exclude=minutely,hourly,alerts,flags";
-            $data = json_decode(file_get_contents($url),TRUE);
-            $card['Timezone'] = $data["timezone"];
-            $card['Temperature'] = $data["currently"]["temperature"];
-            $card['Summary'] = $data["currently"]["summary"];
-            $card['Humidity'] = $data["currently"]["humidity"];
-            $card['Pressure'] = $data["currently"]["pressure"];
-            $card['WindSpeed'] = $data["currently"]["windSpeed"];
-            $card['Visibility'] = $data["currently"]["visibility"];
-            $card['CloudCover'] = $data["currently"]["cloudCover"];
-            $card['Ozone'] = $data["currently"]["ozone"];
-            
-            $reval["Card"] = $card;
-            for($i =0; $i < count($data["daily"]["data"]);++$i){
-                $table[$i]['Date'] = $data["daily"]["data"][$i]["time"];
-                $table[$i]['Status'] = $data["daily"]["data"][$i]["icon"];
-                $table[$i]['Summary'] = $data["daily"]["data"][$i]["summary"];
-                $table[$i]['TemperatureHigh'] = $data["daily"]["data"][$i]["temperatureHigh"];
-                $table[$i]['TemperatureLow'] = $data["daily"]["data"][$i]["temperatureLow"];
-                $table[$i]['Wind Speed'] = $data["daily"]["data"][$i]["windSpeed"];
+            $content = @file_get_contents($url);
+            if (strpos($http_response_header[0], "200")){
+                $data = json_decode($content,TRUE);
+                $card['Timezone'] = $data["timezone"];
+                $card['Temperature'] = $data["currently"]["temperature"];
+                $card['Summary'] = $data["currently"]["summary"];
+                $card['Humidity'] = $data["currently"]["humidity"];
+                $card['Pressure'] = $data["currently"]["pressure"];
+                $card['WindSpeed'] = $data["currently"]["windSpeed"];
+                $card['Visibility'] = $data["currently"]["visibility"];
+                $card['CloudCover'] = $data["currently"]["cloudCover"];
+                $card['Ozone'] = $data["currently"]["ozone"];
+                
+                $reval["Card"] = $card;
+                for($i =0; $i < count($data["daily"]["data"]);++$i){
+                    $table[$i]['Date'] = $data["daily"]["data"][$i]["time"];
+                    $table[$i]['Status'] = $data["daily"]["data"][$i]["icon"];
+                    $table[$i]['Summary'] = $data["daily"]["data"][$i]["summary"];
+                    $table[$i]['TemperatureHigh'] = $data["daily"]["data"][$i]["temperatureHigh"];
+                    $table[$i]['TemperatureLow'] = $data["daily"]["data"][$i]["temperatureLow"];
+                    $table[$i]['Wind Speed'] = $data["daily"]["data"][$i]["windSpeed"];
+                }
+
+                $reval["Table"] = $table;
+
+                return $reval;
+            } else{
+                echo "<span class=\"error\">Address is not valid</span>";
+                exit();
             }
-
-            $reval["Table"] = $table;
-
-            return $reval;
         }
         function geocodeAddress($street, $city, $state){
             $coordinates['lat'] = null;
@@ -504,8 +521,8 @@
                         //convert the XML result into array
                         if($data === false){
                             $error = curl_error($ch);
-                            echo $error; 
-                            die('error occured');
+                            echo "<span class=\"error\">Address is not valid</span>";
+                            exit();
                         }else{
 
                             $data = json_decode(json_encode(simplexml_load_string($data)),TRUE);  
@@ -515,7 +532,7 @@
                         curl_close($ch);
 
                     }catch(Exception  $e){
-                        echo 'Message: ' .$e->getMessage();die("Error");
+                        echo "<span class=\"error\">Address is not valid</span>";
                 }
             return $coordinates;
         }
